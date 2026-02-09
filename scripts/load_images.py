@@ -3,8 +3,6 @@ import csv
 
 def create_image_csv():
     script_dir = os.path.dirname(os.path.abspath(__file__))
-
-    # Raíz del proyecto (un nivel arriba del script)
     project_root = os.path.abspath(os.path.join(script_dir, ".."))
 
     image_dir = os.path.join(project_root, "data", "images")
@@ -12,21 +10,21 @@ def create_image_csv():
 
     rows = []
 
-    for filename in os.listdir(image_dir):
-        if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.tif', '.tiff')):
-            if 'HH' in filename:
-                label = 'HH'
-            elif 'Normal' in filename:
-                label = 'Normal'
-            else:
-                continue
+    # Recorrer carpetas de labels
+    for label in os.listdir(image_dir):
+        label_path = os.path.join(image_dir, label)
 
-            image_path = os.path.join(image_dir, filename)
+        if not os.path.isdir(label_path):
+            continue
 
-            # Convertir a ruta relativa respecto a project_root
-            relative_path = os.path.relpath(image_path, project_root)
+        for filename in os.listdir(label_path):
+            if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.tif', '.tiff')):
+                image_path = os.path.join(label_path, filename)
 
-            rows.append([relative_path, label])
+                # Ruta relativa respecto al root del proyecto
+                relative_path = os.path.relpath(image_path, project_root)
+
+                rows.append([relative_path, label])
 
     os.makedirs(os.path.dirname(output_csv), exist_ok=True)
 
