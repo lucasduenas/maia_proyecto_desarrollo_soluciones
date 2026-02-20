@@ -2,3 +2,5 @@
 data/csv/images_labels.csv
 outputs/
 *.pyc
+.vscode/
+.env
