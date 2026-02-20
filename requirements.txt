@@ -2,7 +2,7 @@ torch
 torchvision
 numpy
 pandas
-matplontlib
+matplotlib
 scikit-learn
 scipy
 Pillow
