@@ -1,0 +1,6 @@
+flask
+requests
+fastapi
+uvicorn
+python-multipart
+reportlab
