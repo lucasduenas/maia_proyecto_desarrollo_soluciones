@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Hernia AI Diagnosis</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="app-container">
+
+    <!-- LEFT -->
+    <div class="viewer">
+        <h2>X-Ray Viewer</h2>
+
+        <form method="POST" enctype="multipart/form-data">
+            <input type="file" name="image" accept="image/*" required>
+            <button type="submit">Run Analysis</button>
+        </form>
+
+        {% if image_preview %}
+            <img src="data:image/png;base64,{{ image_preview }}" class="xray">
+        {% endif %}
+    </div>
+
+    <!-- RIGHT -->
+    <div class="results">
+        <h2>Results</h2>
+
+        {% if result %}
+            <div class="status {{ 'danger' if result.has_hernia else 'success' }}">
+                {{ "Hernia Detected" if result.has_hernia else "No Hernia Detected" }}
+            </div>
+
+            <p><strong>Type:</strong> {{ result.type }}</p>
+
+            <div class="confidence">
+                <span>Confidence</span>
+                <div class="bar">
+                    <div class="fill" style="width: {{ result.confidence * 100 }}%"></div>
+                </div>
+                <small>{{ result.confidence * 100 }}%</small>
+            </div>
+
+            <a href="/export_pdf" class="pdf-btn">Export PDF</a>
+        {% else %}
+            <p>No analysis performed yet.</p>
+        {% endif %}
+    </div>
+
+</div>
+
+</body>
+</html>
