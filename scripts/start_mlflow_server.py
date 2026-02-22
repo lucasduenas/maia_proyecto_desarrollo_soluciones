@@ -48,7 +48,7 @@ def iniciar_servidor_mlflow(
             raiz = raiz.parent
             
         # backend_store = str(raiz / 'outputs' / 'hiatal_mlflow' / 'mlruns')
-        ackend_store = str(raiz / 'sqlite:///mlflow.db')        
+        backend_store = str(raiz / 'sqlite:///mlflow.db')        
         artifact_root = str(raiz / 'outputs' / 'hiatal_mlflow' / 'mlartifacts')
     
     # Crear directorios si no existen
