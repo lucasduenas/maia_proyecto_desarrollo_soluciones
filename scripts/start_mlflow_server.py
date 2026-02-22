@@ -91,6 +91,7 @@ def iniciar_servidor_mlflow(
         '--backend-store-uri', backend_store,
         '--default-artifact-root', artifact_root,
         '--allowed-hosts', f'{allowed_hosts[0]}, {allowed_hosts[1]}, {allowed_hosts[2]}',
+        '--cors-allowed-origins', "*",
         '--serve-artifacts',
     ]  
     
