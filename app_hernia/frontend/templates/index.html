@@ -1,21 +1,44 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Hernia AI Diagnosis</title>
+    <title>HernIA | Clasificación de hernias hiatales</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
+<script>
+    const fileInput = document.getElementById("file-upload");
+    const fileNameSpan = document.getElementById("file-name");
+
+    fileInput.addEventListener("change", () => {
+        if (fileInput.files.length > 0) {
+            fileNameSpan.textContent = fileInput.files[0].name;
+        } else {
+            fileNameSpan.textContent = "Ningún archivo seleccionado";
+        }
+    });
+</script>
 <body>
+
+<header class="app-header">
+    <h1>HernIA</h1>
+    <p>Clasificación de hernias hiatales en imágenes radiológicas frontales</p>
+</header>
 
 <div class="app-container">
 
     <!-- LEFT -->
     <div class="viewer">
-        <h2>X-Ray Viewer</h2>
+        <h2>Ver Radiografía</h2>
 
         <form method="POST" enctype="multipart/form-data">
-            <input type="file" name="image" accept="image/*" required>
-            <button type="submit">Run Analysis</button>
+            <label for="file-upload" class="file-label">
+                Seleccionar imagen
+            </label>
+            <span id="file-name">Ningún archivo seleccionado</span>
+        
+            <input id="file-upload" type="file" name="image" accept="image/*" required hidden>
+        
+            <button type="submit">Iniciar Análisis</button>
         </form>
 
         {% if image_preview %}
@@ -25,30 +48,34 @@
 
     <!-- RIGHT -->
     <div class="results">
-        <h2>Results</h2>
+        <h2>Resultados</h2>
 
         {% if result %}
             <div class="status {{ 'danger' if result.has_hernia else 'success' }}">
-                {{ "Hernia Detected" if result.has_hernia else "No Hernia Detected" }}
+                {{ "Hernia detectada" if result.has_hernia else "No se ha detectado hernia" }}
             </div>
 
-            <p><strong>Type:</strong> {{ result.type }}</p>
-
             <div class="confidence">
-                <span>Confidence</span>
+                <span>Nivel de Confianza</span>
                 <div class="bar">
                     <div class="fill" style="width: {{ result.confidence * 100 }}%"></div>
                 </div>
                 <small>{{ result.confidence * 100 }}%</small>
             </div>
 
-            <a href="/export_pdf" class="pdf-btn">Export PDF</a>
+            <a href="/export_pdf" class="pdf-btn">Exportar en PDF</a>
         {% else %}
-            <p>No analysis performed yet.</p>
+            <p>No se ha realizado ningún análisis aún.</p>
         {% endif %}
     </div>
 
 </div>
-
+<footer class="app-footer">
+    <p>
+        Esta aplicación tiene fines exclusivamente académicos y de investigación.
+        Los resultados generados no deben ser utilizados para diagnóstico, tratamiento
+        o toma de decisiones clínicas en situaciones médicas reales.
+    </p>
+</footer>
 </body>
 </html>
