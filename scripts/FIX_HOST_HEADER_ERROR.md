@@ -10,7 +10,20 @@ Este error ocurre porque MLflow valida el header `Host` de las peticiones HTTP p
 
 ## ✅ Soluciones Rápidas
 
-### Opción 1: Usar el script Python actualizado (Recomendado)
+### Opción 1: Script sin validación (MÁS FÁCIL - Recomendado para desarrollo)
+
+```bash
+# Detener el servidor actual (Ctrl+C)
+
+# Usar el script que deshabilita la validación de host
+python scripts/start_mlflow_no_validation.py
+```
+
+Este script deshabilita completamente la validación de host y es la solución más simple para desarrollo.
+
+⚠️ **Solo para desarrollo**: No uses este script en producción.
+
+### Opción 2: Usar el script Python actualizado
 
 ```bash
 # Detener el servidor actual (Ctrl+C)

@@ -81,7 +81,8 @@ def iniciar_servidor_mlflow(
     print(f"   CORS: Habilitado para todos los orígenes")
     print(f"   Hosts permitidos: {allowed_hosts_str}")
     
-    # Comando para iniciar MLflow
+    # Comando para iniciar MLflow con --app-name basic-auth deshabilitado
+    # para evitar problemas de validación de host
     comando = [
         'mlflow', 'server',
         '--host', host,
@@ -89,21 +90,30 @@ def iniciar_servidor_mlflow(
         '--backend-store-uri', backend_store,
         '--default-artifact-root', artifact_root,
         '--serve-artifacts',
-        '--app-name', 'basic-auth',  # Usar autenticación básica (opcional)
     ]
     
     # Variables de entorno para habilitar CORS y configurar hosts permitidos
-    env = {
-        **subprocess.os.environ,
-        # CORS
-        'MLFLOW_ENABLE_CORS': 'true',
-        'MLFLOW_CORS_ALLOW_ORIGIN': '*',  # Permite todos los orígenes
-        'MLFLOW_CORS_ALLOW_METHODS': 'GET,POST,PUT,DELETE,OPTIONS',
-        'MLFLOW_CORS_ALLOW_HEADERS': 'Content-Type,Authorization,X-Requested-With',
-        'MLFLOW_CORS_ALLOW_CREDENTIALS': 'true',
-        # Hosts permitidos (soluciona el error de Host header)
-        'MLFLOW_ALLOWED_HOSTS': allowed_hosts_str,
-    }
+    import os
+    env = os.environ.copy()
+    
+    # CORS
+    env['MLFLOW_ENABLE_CORS'] = 'true'
+    env['MLFLOW_CORS_ALLOW_ORIGIN'] = '*'
+    env['MLFLOW_CORS_ALLOW_METHODS'] = 'GET,POST,PUT,DELETE,OPTIONS'
+    env['MLFLOW_CORS_ALLOW_HEADERS'] = 'Content-Type,Authorization,X-Requested-With'
+    env['MLFLOW_CORS_ALLOW_CREDENTIALS'] = 'true'
+    
+    # Hosts permitidos - CRÍTICO para solucionar el error
+    env['MLFLOW_ALLOWED_HOSTS'] = allowed_hosts_str
+    
+    # Deshabilitar la validación estricta de host (para desarrollo)
+    env['MLFLOW_DISABLE_HOST_VALIDATION'] = 'true'
+    
+    print(f"\n� Variables de entorno configuradas:")
+    print(f"   MLFLOW_ENABLE_CORS: {env.get('MLFLOW_ENABLE_CORS')}")
+    print(f"   MLFLOW_CORS_ALLOW_ORIGIN: {env.get('MLFLOW_CORS_ALLOW_ORIGIN')}")
+    print(f"   MLFLOW_ALLOWED_HOSTS: {env.get('MLFLOW_ALLOWED_HOSTS')}")
+    print(f"   MLFLOW_DISABLE_HOST_VALIDATION: {env.get('MLFLOW_DISABLE_HOST_VALIDATION')}")
     
     print(f"\n🚀 Iniciando servidor...")
     print(f"   Comando: {' '.join(comando)}")
