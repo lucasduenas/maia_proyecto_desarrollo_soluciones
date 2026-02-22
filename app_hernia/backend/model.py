@@ -9,5 +9,5 @@ def predict_hernia(image_bytes: bytes):
     return {
         "has_hernia": has_hernia,
         "confidence": round(random.uniform(0.75, 0.95), 2),
-        "type": "Tipo I (Deslizamiento)" if has_hernia else "N/A"
+        "type": "Tiene hernia" if has_hernia else "No tiene hernia"
     }
