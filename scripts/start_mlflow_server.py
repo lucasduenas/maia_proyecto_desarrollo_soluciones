@@ -64,12 +64,8 @@ def iniciar_servidor_mlflow(
         print(f"Variables de entorno en None")
         # Por defecto, permitir localhost, 127.0.0.1 y cualquier IP con el puerto
         allowed_hosts = [
-            'localhost',
-            '127.0.0.1',
             f'localhost:{port}',
-            f'127.0.0.1:{port}',
-            '*',  # Permite cualquier host (útil para desarrollo)
-            '45.238.183.248:*',
+            f'127.0.0.1:{port}',            
             '35.173.82.156:8050'
         ]
     
