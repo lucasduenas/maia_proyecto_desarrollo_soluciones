@@ -49,7 +49,8 @@ hernia_app/
 │ ├── templates/
 │ │ └── index.html # Interfaz de usuario
 │ └── static/
-│ └── style.css # Estilos CSS
+    └── uploads/  # Carpeta para guardar imágenes subidas por los usuarios
+│   └── style.css # Estilos CSS
 │
 ├── venv/ # Entorno virtual de Python
 └── requirements.txt # Dependencias del proyecto
