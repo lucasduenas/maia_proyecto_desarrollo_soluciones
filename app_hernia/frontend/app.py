@@ -1,39 +1,53 @@
-from flask import Flask, render_template, request, send_file
-import requests
+import os
+import io
+import uuid
 import base64
-from io import BytesIO
+from flask import Flask, render_template, request, send_file, session
+from reportlab.platypus import (
+    SimpleDocTemplate, Paragraph, Spacer, Image as RLImage, Table, TableStyle
+)
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
-from reportlab.lib.utils import ImageReader
+from reportlab.lib import colors
 
 app = Flask(__name__)
-API_URL = "http://localhost:8000/predict"
+app.secret_key = "hernia_secret_key"
 
-last_result = {}
-last_image = None
+UPLOAD_FOLDER = "static/uploads"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
 
 @app.route("/", methods=["GET", "POST"])
 def index():
-    global last_result, last_image
-
     result = None
     image_preview = None
 
     if request.method == "POST":
         image = request.files["image"]
-        image_bytes = image.read()
-        last_image = image_bytes
 
+        # 1. Crear ID único por análisis
+        analysis_id = str(uuid.uuid4())
+
+        # 2. Leer imagen una sola vez
+        image_bytes = image.read()
+
+        # 3. Guardar imagen con ID único
+        image_path = os.path.join(UPLOAD_FOLDER, f"{analysis_id}.png")
+        with open(image_path, "wb") as f:
+            f.write(image_bytes)
+
+        # 4. Preview en base64
         image_preview = base64.b64encode(image_bytes).decode("utf-8")
 
-        response = requests.post(
-            API_URL,
-            files={"file": (image.filename, image_bytes, image.mimetype)}
-        )
+        # 5. Inferencia (mock por ahora)
+        result = {
+            "analysis_id": analysis_id,
+            "has_hernia": True,
+            "confidence": 0.88
+        }
 
-        if response.status_code == 200:
-            result = response.json()
-            last_result = result
+        # 6. Guardar resultado en sesión
+        session["last_result"] = result
 
     return render_template(
         "index.html",
@@ -44,39 +58,89 @@ def index():
 
 @app.route("/export_pdf")
 def export_pdf():
-    buffer = BytesIO()
-    pdf = canvas.Canvas(buffer, pagesize=A4)
-    width, height = A4
+    result = session.get("last_result")
 
-    pdf.setFont("Helvetica-Bold", 18)
-    pdf.drawString(50, height - 50, "Hernia Detection Report")
+    if not result:
+        return "No hay resultados para exportar", 400
 
-    pdf.setFont("Helvetica", 12)
-    pdf.drawString(50, height - 100, f"Hernia Detected: {last_result.get('has_hernia')}")
-    pdf.drawString(50, height - 130, f"Type: {last_result.get('type')}")
-    pdf.drawString(50, height - 160, f"Confidence: {last_result.get('confidence') * 100}%")
+    image_path = os.path.join(
+        UPLOAD_FOLDER, f"{result['analysis_id']}.png"
+    )
 
-    if last_image:
-        image_stream = BytesIO(last_image)
-        img = ImageReader(image_stream)
+    buffer = io.BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        rightMargin=40,
+        leftMargin=40,
+        topMargin=40,
+        bottomMargin=40
+    )
 
-        pdf.drawImage(
-            img,
-            50,
-            height - 450,
-            width=300,
-            preserveAspectRatio=True,
-            mask='auto'
+    styles = getSampleStyleSheet()
+    elements = []
+
+    # ===== HEADER =====
+    title = Paragraph(
+        "<b>HernIA</b><br/><font size=11>"
+        "Clasificación de hernias hiatales en imágenes radiológicas frontales</font>",
+        ParagraphStyle(
+            "title",
+            fontSize=18,
+            alignment=1,
+            spaceAfter=20
         )
+    )
+    elements.append(title)
 
-    pdf.showPage()
-    pdf.save()
+    # ===== IMAGEN =====
+    elements.append(RLImage(image_path, width=320, height=320))
+    elements.append(Spacer(1, 20))
 
+    # ===== RESULTADOS =====
+    status_color = colors.red if result["has_hernia"] else colors.green
+    status_text = (
+        "Hernia detectada" if result["has_hernia"]
+        else "No se detectó hernia"
+    )
+
+    table = Table(
+        [
+            ["Resultado", status_text],
+            ["Nivel de confianza", f"{int(result['confidence'] * 100)} %"]
+        ],
+        colWidths=[200, 200]
+    )
+
+    table.setStyle(TableStyle([
+        ("TEXTCOLOR", (1, 0), (1, 0), status_color),
+        ("GRID", (0, 0), (-1, -1), 0.5, colors.lightgrey),
+        ("FONTSIZE", (0, 0), (-1, -1), 11),
+        ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
+    ]))
+
+    elements.append(table)
+    elements.append(Spacer(1, 30))
+
+    # ===== DISCLAIMER =====
+    disclaimer = Paragraph(
+        "<font size=9 color='#555555'>"
+        "Esta aplicación tiene fines exclusivamente académicos y de investigación. "
+        "Los resultados generados no deben ser utilizados para diagnóstico, tratamiento "
+        "o toma de decisiones clínicas en situaciones médicas reales."
+        "</font>",
+        styles["Normal"]
+    )
+
+    elements.append(disclaimer)
+
+    doc.build(elements)
     buffer.seek(0)
+
     return send_file(
         buffer,
         as_attachment=True,
-        download_name="hernia_report.pdf",
+        download_name="reporte_hernia.pdf",
         mimetype="application/pdf"
     )
 
