@@ -28,7 +28,7 @@ def iniciar_servidor_mlflow(
     port=8050,
     backend_store=None,
     artifact_root=None,
-    allowed_hosts=env['MLFLOW_ALLOWED_HOSTS']
+    allowed_hosts=None
 ):
     """
     Inicia el servidor MLflow con CORS habilitado
