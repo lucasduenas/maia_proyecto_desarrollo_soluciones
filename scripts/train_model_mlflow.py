@@ -99,10 +99,21 @@ def configurar_experimento():
         'MLFLOW_EXPERIMENTO': 'hernia-hiatal-production',
         'MLFLOW_TRACKING_URI': 'http://localhost:8050',
         'MLFLOW_REGISTRAR_MODELO': True,
+        
+        # MLflow Server (para iniciar automáticamente)
+        'MLFLOW_AUTO_START': False,  # Cambiar a True para iniciar automáticamente
+        'MLFLOW_HOST': '0.0.0.0',  # 0.0.0.0 permite acceso desde cualquier IP
+        'MLFLOW_PORT': 8050,
+        'MLFLOW_BACKEND_STORE': None,  # Se configurará automáticamente
+        'MLFLOW_ARTIFACT_ROOT': None,  # Se configurará automáticamente
     }
     
     # Crear directorio de salida
     config['RUTA_SALIDA'].mkdir(parents=True, exist_ok=True)
+    
+    # Configurar rutas de MLflow
+    config['MLFLOW_BACKEND_STORE'] = str(config['RUTA_SALIDA'] / 'mlruns')
+    config['MLFLOW_ARTIFACT_ROOT'] = str(config['RUTA_SALIDA'] / 'mlartifacts')
     
     # Dispositivo
     config['DISPOSITIVO'] = torch.device('cuda') if torch.cuda.is_available() else (
@@ -274,6 +285,115 @@ def calcular_peso_positivo(muestras, indices, dispositivo):
     positivos = float(etiquetas.sum())
     negativos = float(len(etiquetas) - positivos)
     return torch.tensor([negativos / max(positivos, 1.0)], device=dispositivo)
+
+
+# ============================================================================
+# MLFLOW SERVER CON CORS
+# ============================================================================
+
+def iniciar_mlflow_server(config):
+    """Inicia el servidor MLflow con CORS habilitado"""
+    import socket
+    
+    # Verificar si el puerto está disponible
+    def puerto_disponible(host, port):
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            sock.settimeout(1)
+            result = sock.connect_ex((host, port))
+            sock.close()
+            return result != 0
+        except:
+            return False
+    
+    if not puerto_disponible('localhost', config['MLFLOW_PORT']):
+        print(f"\n⚠️  El puerto {config['MLFLOW_PORT']} ya está en uso.")
+        print(f"   Asumiendo que MLflow ya está corriendo...")
+        return None
+    
+    print(f"\n🚀 Iniciando servidor MLflow con CORS habilitado...")
+    print(f"   Host: {config['MLFLOW_HOST']}")
+    print(f"   Puerto: {config['MLFLOW_PORT']}")
+    print(f"   Backend: {config['MLFLOW_BACKEND_STORE']}")
+    print(f"   Artifacts: {config['MLFLOW_ARTIFACT_ROOT']}")
+    
+    # Comando para iniciar MLflow con CORS
+    comando = [
+        'mlflow', 'server',
+        '--host', config['MLFLOW_HOST'],
+        '--port', str(config['MLFLOW_PORT']),
+        '--backend-store-uri', config['MLFLOW_BACKEND_STORE'],
+        '--default-artifact-root', config['MLFLOW_ARTIFACT_ROOT'],
+        '--serve-artifacts',  # Habilita el servidor de artifacts
+    ]
+    
+    # Variables de entorno para habilitar CORS
+    env = {
+        **subprocess.os.environ,
+        'MLFLOW_ENABLE_CORS': 'true',
+        'MLFLOW_CORS_ALLOW_ORIGIN': '*',  # Permite todos los orígenes
+        'MLFLOW_CORS_ALLOW_METHODS': 'GET,POST,PUT,DELETE,OPTIONS',
+        'MLFLOW_CORS_ALLOW_HEADERS': 'Content-Type,Authorization',
+    }
+    
+    try:
+        # Iniciar el proceso en segundo plano
+        proceso = subprocess.Popen(
+            comando,
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True
+        )
+        
+        # Esperar un momento para que el servidor inicie
+        print("   Esperando a que el servidor inicie...")
+        time.sleep(5)
+        
+        # Verificar que el servidor está corriendo
+        if proceso.poll() is None:
+            print(f"   ✅ Servidor MLflow iniciado correctamente")
+            print(f"   📊 UI disponible en: http://localhost:{config['MLFLOW_PORT']}")
+            print(f"   🌐 CORS habilitado para todos los orígenes")
+            return proceso
+        else:
+            stdout, stderr = proceso.communicate()
+            print(f"   ❌ Error al iniciar el servidor:")
+            print(f"   {stderr}")
+            return None
+            
+    except Exception as e:
+        print(f"   ❌ Error al iniciar MLflow: {e}")
+        return None
+
+
+def detener_mlflow_server(proceso):
+    """Detiene el servidor MLflow"""
+    if proceso is not None:
+        print("\n🛑 Deteniendo servidor MLflow...")
+        proceso.terminate()
+        try:
+            proceso.wait(timeout=5)
+            print("   ✅ Servidor detenido correctamente")
+        except subprocess.TimeoutExpired:
+            proceso.kill()
+            print("   ⚠️  Servidor forzado a detenerse")
+
+
+def configurar_mlflow_client(config):
+    """Configura el cliente MLflow con las opciones necesarias"""
+    import os
+    
+    # Configurar variables de entorno para el cliente
+    os.environ['MLFLOW_TRACKING_URI'] = config['MLFLOW_TRACKING_URI']
+    
+    # Configurar MLflow
+    mlflow.set_tracking_uri(config['MLFLOW_TRACKING_URI'])
+    mlflow.set_experiment(config['MLFLOW_EXPERIMENTO'])
+    
+    print(f"\n📡 Cliente MLflow configurado:")
+    print(f"   Tracking URI: {config['MLFLOW_TRACKING_URI']}")
+    print(f"   Experimento: {config['MLFLOW_EXPERIMENTO']}")
 
 
 # ============================================================================
@@ -464,109 +584,119 @@ def main():
     print(f"- MLflow URI: {config['MLFLOW_TRACKING_URI']}")
     print(f"- Experimento: {config['MLFLOW_EXPERIMENTO']}")
     
-    # Cargar datos
-    print(f"\nCargando datos desde {config['RUTA_IMAGENES']}...")
-    muestras = construir_muestras_desde_carpetas(config['RUTA_IMAGENES'])
-    etiquetas = np.array([m.etiqueta for m in muestras], dtype=int)
+    # Iniciar servidor MLflow si está configurado
+    proceso_mlflow = None
+    if config['USAR_MLFLOW'] and config['MLFLOW_AUTO_START']:
+        proceso_mlflow = iniciar_mlflow_server(config)
     
-    print(f"Total de muestras: {len(muestras)}")
-    print(f"- Normal: {(etiquetas == 0).sum()}")
-    print(f"- Hernia: {(etiquetas == 1).sum()}")
-    
-    # Configurar MLflow
-    if config['USAR_MLFLOW']:
-        mlflow.set_tracking_uri(config['MLFLOW_TRACKING_URI'])
-        mlflow.set_experiment(config['MLFLOW_EXPERIMENTO'])
-    
-    # Crear pliegues
-    pliegues = construir_pliegues(muestras, config['N_SPLITS'], config['SEMILLA'])
-    
-    # Entrenar primer fold (demo)
-    print(f"\n{'='*80}")
-    print("ENTRENANDO FOLD 1 (DEMO)")
-    print(f"{'='*80}")
-    
-    train_idx, val_idx = pliegues[0]
-    
-    # Transformaciones
-    transf_train, transf_val = construir_transformaciones(config)
-    
-    # Datasets
-    dataset_train = ConjuntoHiatal(muestras, train_idx, transf_train, config['USAR_AUTOCONTRASTE'])
-    dataset_val = ConjuntoHiatal(muestras, val_idx, transf_val, config['USAR_AUTOCONTRASTE'])
-    
-    # DataLoaders
-    train_loader = DataLoader(
-        dataset_train,
-        batch_size=config['TAM_BATCH'],
-        shuffle=True,
-        num_workers=0,
-        pin_memory=config['DISPOSITIVO'].type == 'cuda'
-    )
-    val_loader = DataLoader(
-        dataset_val,
-        batch_size=config['TAM_BATCH'],
-        shuffle=False,
-        num_workers=0,
-        pin_memory=config['DISPOSITIVO'].type == 'cuda'
-    )
-    
-    # Crear modelo
-    modelo = crear_modelo(config)
-    
-    # Entrenar con MLflow
-    if config['USAR_MLFLOW']:
-        with mlflow.start_run(run_name=config['MLFLOW_RUN_NAME']):
-            # Registrar parámetros
-            mlflow.log_params({
-                'tam_imagen': config['TAM_IMAGEN'],
-                'tam_batch': config['TAM_BATCH'],
-                'epocas': config['EPOCAS'],
-                'dropout': config['DROPOUT'],
-                'usar_roi': config['USAR_ROI'],
-                'usar_autocontraste': config['USAR_AUTOCONTRASTE'],
-                'usar_aumentacion': config['USAR_AUMENTACION_TRAIN'],
-                'n_splits': config['N_SPLITS'],
-                'semilla': config['SEMILLA'],
-            })
-            
-            # Entrenar
+    try:
+        # Cargar datos
+        print(f"\nCargando datos desde {config['RUTA_IMAGENES']}...")
+        muestras = construir_muestras_desde_carpetas(config['RUTA_IMAGENES'])
+        etiquetas = np.array([m.etiqueta for m in muestras], dtype=int)
+        
+        print(f"Total de muestras: {len(muestras)}")
+        print(f"- Normal: {(etiquetas == 0).sum()}")
+        print(f"- Hernia: {(etiquetas == 1).sum()}")
+        
+        # Configurar MLflow
+        if config['USAR_MLFLOW']:
+            configurar_mlflow_client(config)
+        
+        # Crear pliegues
+        pliegues = construir_pliegues(muestras, config['N_SPLITS'], config['SEMILLA'])
+        
+        # Entrenar primer fold (demo)
+        print(f"\n{'='*80}")
+        print("ENTRENANDO FOLD 1 (DEMO)")
+        print(f"{'='*80}")
+        
+        train_idx, val_idx = pliegues[0]
+        
+        # Transformaciones
+        transf_train, transf_val = construir_transformaciones(config)
+        
+        # Datasets
+        dataset_train = ConjuntoHiatal(muestras, train_idx, transf_train, config['USAR_AUTOCONTRASTE'])
+        dataset_val = ConjuntoHiatal(muestras, val_idx, transf_val, config['USAR_AUTOCONTRASTE'])
+        
+        # DataLoaders
+        train_loader = DataLoader(
+            dataset_train,
+            batch_size=config['TAM_BATCH'],
+            shuffle=True,
+            num_workers=0,
+            pin_memory=config['DISPOSITIVO'].type == 'cuda'
+        )
+        val_loader = DataLoader(
+            dataset_val,
+            batch_size=config['TAM_BATCH'],
+            shuffle=False,
+            num_workers=0,
+            pin_memory=config['DISPOSITIVO'].type == 'cuda'
+        )
+        
+        # Crear modelo
+        modelo = crear_modelo(config)
+        
+        # Entrenar con MLflow
+        if config['USAR_MLFLOW']:
+            with mlflow.start_run(run_name=config['MLFLOW_RUN_NAME']):
+                # Registrar parámetros
+                mlflow.log_params({
+                    'tam_imagen': config['TAM_IMAGEN'],
+                    'tam_batch': config['TAM_BATCH'],
+                    'epocas': config['EPOCAS'],
+                    'dropout': config['DROPOUT'],
+                    'usar_roi': config['USAR_ROI'],
+                    'usar_autocontraste': config['USAR_AUTOCONTRASTE'],
+                    'usar_aumentacion': config['USAR_AUMENTACION_TRAIN'],
+                    'n_splits': config['N_SPLITS'],
+                    'semilla': config['SEMILLA'],
+                })
+                
+                # Entrenar
+                modelo, historial = entrenar_fold(modelo, train_loader, val_loader, config, fold_num=1)
+                
+                # Registrar métricas finales
+                metricas_finales = historial[-1]
+                mlflow.log_metrics({
+                    'val_loss': metricas_finales['perdida_val'],
+                    'val_auc': metricas_finales['auc'],
+                    'val_accuracy': metricas_finales['accuracy'],
+                    'val_f1': metricas_finales['f1'],
+                    'val_sensibilidad': metricas_finales['sensibilidad'],
+                    'val_especificidad': metricas_finales['especificidad'],
+                })
+                
+                # Guardar modelo
+                if config['MLFLOW_REGISTRAR_MODELO']:
+                    mlflow.pytorch.log_model(modelo, "model")
+                    print(f"\n✅ Modelo registrado en MLflow")
+                
+                print(f"\n{'='*80}")
+                print("ENTRENAMIENTO COMPLETADO")
+                print(f"{'='*80}")
+                print(f"\nMétricas finales:")
+                print(f"- AUC: {metricas_finales['auc']:.4f}")
+                print(f"- Accuracy: {metricas_finales['accuracy']:.4f}")
+                print(f"- F1: {metricas_finales['f1']:.4f}")
+                print(f"- Sensibilidad: {metricas_finales['sensibilidad']:.4f}")
+                print(f"- Especificidad: {metricas_finales['especificidad']:.4f}")
+                print(f"\n📊 Puedes ver los resultados en: {config['MLFLOW_TRACKING_URI']}")
+        
+        else:
+            # Entrenar sin MLflow
             modelo, historial = entrenar_fold(modelo, train_loader, val_loader, config, fold_num=1)
-            
-            # Registrar métricas finales
-            metricas_finales = historial[-1]
-            mlflow.log_metrics({
-                'val_loss': metricas_finales['perdida_val'],
-                'val_auc': metricas_finales['auc'],
-                'val_accuracy': metricas_finales['accuracy'],
-                'val_f1': metricas_finales['f1'],
-                'val_sensibilidad': metricas_finales['sensibilidad'],
-                'val_especificidad': metricas_finales['especificidad'],
-            })
-            
-            # Guardar modelo
-            if config['MLFLOW_REGISTRAR_MODELO']:
-                mlflow.pytorch.log_model(modelo, "model")
-                print(f"\nModelo registrado en MLflow")
             
             print(f"\n{'='*80}")
             print("ENTRENAMIENTO COMPLETADO")
             print(f"{'='*80}")
-            print(f"\nMétricas finales:")
-            print(f"- AUC: {metricas_finales['auc']:.4f}")
-            print(f"- Accuracy: {metricas_finales['accuracy']:.4f}")
-            print(f"- F1: {metricas_finales['f1']:.4f}")
-            print(f"- Sensibilidad: {metricas_finales['sensibilidad']:.4f}")
-            print(f"- Especificidad: {metricas_finales['especificidad']:.4f}")
-            print(f"\nPuedes ver los resultados en: {config['MLFLOW_TRACKING_URI']}")
     
-    else:
-        # Entrenar sin MLflow
-        modelo, historial = entrenar_fold(modelo, train_loader, val_loader, config, fold_num=1)
-        
-        print(f"\n{'='*80}")
-        print("ENTRENAMIENTO COMPLETADO")
-        print(f"{'='*80}")
+    finally:
+        # Detener servidor MLflow si fue iniciado por este script
+        if proceso_mlflow is not None:
+            detener_mlflow_server(proceso_mlflow)
 
 
 if __name__ == '__main__':

@@ -1,0 +1,196 @@
+"""
+Script para iniciar el servidor MLflow con CORS habilitado
+"""
+
+import subprocess
+import sys
+import time
+import socket
+from pathlib import Path
+
+
+def puerto_disponible(host, port):
+    """Verifica si un puerto está disponible"""
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(1)
+        result = sock.connect_ex((host, port))
+        sock.close()
+        return result != 0
+    except:
+        return False
+
+
+def iniciar_servidor_mlflow(
+    host='0.0.0.0',
+    port=8050,
+    backend_store=None,
+    artifact_root=None
+):
+    """
+    Inicia el servidor MLflow con CORS habilitado
+    
+    Args:
+        host: Host donde escuchará el servidor (0.0.0.0 permite acceso externo)
+        port: Puerto del servidor
+        backend_store: Ruta para almacenar metadatos (por defecto: ./outputs/hiatal_mlflow/mlruns)
+        artifact_root: Ruta para almacenar artifacts (por defecto: ./outputs/hiatal_mlflow/mlartifacts)
+    """
+    
+    # Configurar rutas por defecto
+    if backend_store is None:
+        raiz = Path.cwd().resolve()
+        if raiz.name == 'scripts':
+            raiz = raiz.parent
+        backend_store = str(raiz / 'outputs' / 'hiatal_mlflow' / 'mlruns')
+        artifact_root = str(raiz / 'outputs' / 'hiatal_mlflow' / 'mlartifacts')
+    
+    # Crear directorios si no existen
+    Path(backend_store).mkdir(parents=True, exist_ok=True)
+    Path(artifact_root).mkdir(parents=True, exist_ok=True)
+    
+    # Verificar si el puerto está disponible
+    if not puerto_disponible('localhost', port):
+        print(f"❌ Error: El puerto {port} ya está en uso.")
+        print(f"   Por favor, detén el proceso que está usando ese puerto o usa otro puerto.")
+        return False
+    
+    print("="*80)
+    print("INICIANDO SERVIDOR MLFLOW CON CORS")
+    print("="*80)
+    print(f"\n📋 Configuración:")
+    print(f"   Host: {host}")
+    print(f"   Puerto: {port}")
+    print(f"   Backend Store: {backend_store}")
+    print(f"   Artifact Root: {artifact_root}")
+    print(f"   CORS: Habilitado para todos los orígenes")
+    
+    # Comando para iniciar MLflow
+    comando = [
+        'mlflow', 'server',
+        '--host', host,
+        '--port', str(port),
+        '--backend-store-uri', backend_store,
+        '--default-artifact-root', artifact_root,
+        '--serve-artifacts',
+    ]
+    
+    # Variables de entorno para habilitar CORS
+    env = {
+        **subprocess.os.environ,
+        'MLFLOW_ENABLE_CORS': 'true',
+        'MLFLOW_CORS_ALLOW_ORIGIN': '*',  # Permite todos los orígenes
+        'MLFLOW_CORS_ALLOW_METHODS': 'GET,POST,PUT,DELETE,OPTIONS',
+        'MLFLOW_CORS_ALLOW_HEADERS': 'Content-Type,Authorization,X-Requested-With',
+        'MLFLOW_CORS_ALLOW_CREDENTIALS': 'true',
+    }
+    
+    print(f"\n🚀 Iniciando servidor...")
+    print(f"   Comando: {' '.join(comando)}")
+    
+    try:
+        # Iniciar el servidor
+        proceso = subprocess.Popen(
+            comando,
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1
+        )
+        
+        # Esperar un momento para que el servidor inicie
+        print(f"\n⏳ Esperando a que el servidor inicie...")
+        time.sleep(3)
+        
+        # Verificar que el servidor está corriendo
+        if proceso.poll() is None:
+            print(f"\n✅ Servidor MLflow iniciado correctamente!")
+            print(f"\n📊 Accede a la UI en:")
+            print(f"   http://localhost:{port}")
+            if host == '0.0.0.0':
+                print(f"   http://127.0.0.1:{port}")
+                print(f"   http://<tu-ip>:{port}")
+            
+            print(f"\n🌐 CORS configurado:")
+            print(f"   - Allow Origin: * (todos los orígenes)")
+            print(f"   - Allow Methods: GET, POST, PUT, DELETE, OPTIONS")
+            print(f"   - Allow Headers: Content-Type, Authorization, X-Requested-With")
+            
+            print(f"\n💡 Para detener el servidor, presiona Ctrl+C")
+            print("="*80)
+            
+            # Mantener el proceso corriendo y mostrar logs
+            try:
+                for linea in proceso.stdout:
+                    print(linea, end='')
+            except KeyboardInterrupt:
+                print(f"\n\n🛑 Deteniendo servidor...")
+                proceso.terminate()
+                try:
+                    proceso.wait(timeout=5)
+                    print("✅ Servidor detenido correctamente")
+                except subprocess.TimeoutExpired:
+                    proceso.kill()
+                    print("⚠️  Servidor forzado a detenerse")
+            
+            return True
+        else:
+            stdout, stderr = proceso.communicate()
+            print(f"\n❌ Error al iniciar el servidor:")
+            print(stdout)
+            if stderr:
+                print(stderr)
+            return False
+            
+    except FileNotFoundError:
+        print(f"\n❌ Error: No se encontró el comando 'mlflow'")
+        print(f"   Asegúrate de tener MLflow instalado:")
+        print(f"   pip install mlflow")
+        return False
+    except Exception as e:
+        print(f"\n❌ Error inesperado: {e}")
+        return False
+
+
+def main():
+    """Función principal"""
+    import argparse
+    
+    parser = argparse.ArgumentParser(
+        description='Inicia el servidor MLflow con CORS habilitado'
+    )
+    parser.add_argument(
+        '--host',
+        default='0.0.0.0',
+        help='Host donde escuchará el servidor (default: 0.0.0.0)'
+    )
+    parser.add_argument(
+        '--port',
+        type=int,
+        default=8050,
+        help='Puerto del servidor (default: 8050)'
+    )
+    parser.add_argument(
+        '--backend-store',
+        default=None,
+        help='Ruta para almacenar metadatos'
+    )
+    parser.add_argument(
+        '--artifact-root',
+        default=None,
+        help='Ruta para almacenar artifacts'
+    )
+    
+    args = parser.parse_args()
+    
+    iniciar_servidor_mlflow(
+        host=args.host,
+        port=args.port,
+        backend_store=args.backend_store,
+        artifact_root=args.artifact_root
+    )
+
+
+if __name__ == '__main__':
+    main()
