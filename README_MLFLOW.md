@@ -124,6 +124,43 @@ config = {
 
 ## 🐛 Solución de problemas
 
+### Error: "Rejected request with invalid Host header"
+
+Si ves este error:
+```
+WARNING mlflow.server.fastapi_security: Rejected request with invalid Host header: 35.173.82.156:8050
+```
+
+**Solución 1: Usar el script actualizado**
+
+El script ya está configurado para permitir todos los hosts. Simplemente reinicia el servidor:
+
+```bash
+python scripts/start_mlflow_server.py
+```
+
+**Solución 2: Especificar hosts permitidos manualmente**
+
+```bash
+python scripts/start_mlflow_server.py --allowed-hosts "localhost,127.0.0.1,35.173.82.156:8050"
+```
+
+**Solución 3: Configurar variable de entorno**
+
+```bash
+export MLFLOW_ALLOWED_HOSTS="localhost,127.0.0.1,35.173.82.156:8050,*"
+mlflow server --host 0.0.0.0 --port 8050 --backend-store-uri ./outputs/hiatal_mlflow/mlruns
+```
+
+**Solución 4: Permitir todos los hosts (desarrollo)**
+
+```bash
+export MLFLOW_ALLOWED_HOSTS="*"
+python scripts/start_mlflow_server.py
+```
+
+⚠️ **Nota de seguridad**: Usar `*` permite cualquier host. Solo úsalo en desarrollo. En producción, especifica los hosts exactos.
+
 ### Puerto ya en uso
 
 ```bash

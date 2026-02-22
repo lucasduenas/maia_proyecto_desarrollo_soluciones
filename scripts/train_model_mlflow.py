@@ -317,6 +317,16 @@ def iniciar_mlflow_server(config):
     print(f"   Backend: {config['MLFLOW_BACKEND_STORE']}")
     print(f"   Artifacts: {config['MLFLOW_ARTIFACT_ROOT']}")
     
+    # Hosts permitidos
+    allowed_hosts = [
+        'localhost',
+        '127.0.0.1',
+        f'localhost:{config["MLFLOW_PORT"]}',
+        f'127.0.0.1:{config["MLFLOW_PORT"]}',
+        '*',  # Permite cualquier host
+    ]
+    allowed_hosts_str = ','.join(allowed_hosts)
+    
     # Comando para iniciar MLflow con CORS
     comando = [
         'mlflow', 'server',
@@ -327,13 +337,16 @@ def iniciar_mlflow_server(config):
         '--serve-artifacts',  # Habilita el servidor de artifacts
     ]
     
-    # Variables de entorno para habilitar CORS
+    # Variables de entorno para habilitar CORS y configurar hosts permitidos
     env = {
         **subprocess.os.environ,
+        # CORS
         'MLFLOW_ENABLE_CORS': 'true',
         'MLFLOW_CORS_ALLOW_ORIGIN': '*',  # Permite todos los orígenes
         'MLFLOW_CORS_ALLOW_METHODS': 'GET,POST,PUT,DELETE,OPTIONS',
         'MLFLOW_CORS_ALLOW_HEADERS': 'Content-Type,Authorization',
+        # Hosts permitidos (soluciona el error de Host header)
+        'MLFLOW_ALLOWED_HOSTS': allowed_hosts_str,
     }
     
     try:

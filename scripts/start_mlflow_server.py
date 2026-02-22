@@ -25,7 +25,8 @@ def iniciar_servidor_mlflow(
     host='0.0.0.0',
     port=8050,
     backend_store=None,
-    artifact_root=None
+    artifact_root=None,
+    allowed_hosts=None
 ):
     """
     Inicia el servidor MLflow con CORS habilitado
@@ -35,6 +36,7 @@ def iniciar_servidor_mlflow(
         port: Puerto del servidor
         backend_store: Ruta para almacenar metadatos (por defecto: ./outputs/hiatal_mlflow/mlruns)
         artifact_root: Ruta para almacenar artifacts (por defecto: ./outputs/hiatal_mlflow/mlartifacts)
+        allowed_hosts: Lista de hosts permitidos (por defecto: localhost, 127.0.0.1, y todas las IPs)
     """
     
     # Configurar rutas por defecto
@@ -55,6 +57,19 @@ def iniciar_servidor_mlflow(
         print(f"   Por favor, detén el proceso que está usando ese puerto o usa otro puerto.")
         return False
     
+    # Configurar hosts permitidos
+    if allowed_hosts is None:
+        # Por defecto, permitir localhost, 127.0.0.1 y cualquier IP con el puerto
+        allowed_hosts = [
+            'localhost',
+            '127.0.0.1',
+            f'localhost:{port}',
+            f'127.0.0.1:{port}',
+            '*',  # Permite cualquier host (útil para desarrollo)
+        ]
+    
+    allowed_hosts_str = ','.join(allowed_hosts)
+    
     print("="*80)
     print("INICIANDO SERVIDOR MLFLOW CON CORS")
     print("="*80)
@@ -64,6 +79,7 @@ def iniciar_servidor_mlflow(
     print(f"   Backend Store: {backend_store}")
     print(f"   Artifact Root: {artifact_root}")
     print(f"   CORS: Habilitado para todos los orígenes")
+    print(f"   Hosts permitidos: {allowed_hosts_str}")
     
     # Comando para iniciar MLflow
     comando = [
@@ -73,16 +89,20 @@ def iniciar_servidor_mlflow(
         '--backend-store-uri', backend_store,
         '--default-artifact-root', artifact_root,
         '--serve-artifacts',
+        '--app-name', 'basic-auth',  # Usar autenticación básica (opcional)
     ]
     
-    # Variables de entorno para habilitar CORS
+    # Variables de entorno para habilitar CORS y configurar hosts permitidos
     env = {
         **subprocess.os.environ,
+        # CORS
         'MLFLOW_ENABLE_CORS': 'true',
         'MLFLOW_CORS_ALLOW_ORIGIN': '*',  # Permite todos los orígenes
         'MLFLOW_CORS_ALLOW_METHODS': 'GET,POST,PUT,DELETE,OPTIONS',
         'MLFLOW_CORS_ALLOW_HEADERS': 'Content-Type,Authorization,X-Requested-With',
         'MLFLOW_CORS_ALLOW_CREDENTIALS': 'true',
+        # Hosts permitidos (soluciona el error de Host header)
+        'MLFLOW_ALLOWED_HOSTS': allowed_hosts_str,
     }
     
     print(f"\n🚀 Iniciando servidor...")
@@ -181,14 +201,25 @@ def main():
         default=None,
         help='Ruta para almacenar artifacts'
     )
+    parser.add_argument(
+        '--allowed-hosts',
+        default=None,
+        help='Lista de hosts permitidos separados por coma (ej: localhost,127.0.0.1,35.173.82.156:8050)'
+    )
     
     args = parser.parse_args()
+    
+    # Procesar allowed_hosts
+    allowed_hosts = None
+    if args.allowed_hosts:
+        allowed_hosts = [h.strip() for h in args.allowed_hosts.split(',')]
     
     iniciar_servidor_mlflow(
         host=args.host,
         port=args.port,
         backend_store=args.backend_store,
-        artifact_root=args.artifact_root
+        artifact_root=args.artifact_root,
+        allowed_hosts=allowed_hosts
     )
 
 
