@@ -7,7 +7,9 @@ import sys
 import time
 import socket
 from pathlib import Path
-
+# Variables de entorno para habilitar CORS y configurar hosts permitidos
+import os
+env = os.environ.copy()
 
 def puerto_disponible(host, port):
     """Verifica si un puerto está disponible"""
@@ -26,7 +28,7 @@ def iniciar_servidor_mlflow(
     port=8050,
     backend_store=None,
     artifact_root=None,
-    allowed_hosts=None
+    allowed_hosts=env['MLFLOW_ALLOWED_HOSTS']
 ):
     """
     Inicia el servidor MLflow con CORS habilitado
@@ -90,11 +92,8 @@ def iniciar_servidor_mlflow(
         '--backend-store-uri', backend_store,
         '--default-artifact-root', artifact_root,
         '--serve-artifacts',
-    ]
+    ]  
     
-    # Variables de entorno para habilitar CORS y configurar hosts permitidos
-    import os
-    env = os.environ.copy()
     
     # CORS
     env['MLFLOW_ENABLE_CORS'] = 'true'
