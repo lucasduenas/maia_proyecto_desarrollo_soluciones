@@ -598,9 +598,9 @@ def main():
     print(f"- Experimento: {config['MLFLOW_EXPERIMENTO']}")
     
     # Iniciar servidor MLflow si está configurado
-    proceso_mlflow = None
-    if config['USAR_MLFLOW'] and config['MLFLOW_AUTO_START']:
-        proceso_mlflow = iniciar_mlflow_server(config)
+    # proceso_mlflow = None
+    # if config['USAR_MLFLOW'] and config['MLFLOW_AUTO_START']:
+    #     proceso_mlflow = iniciar_mlflow_server(config)
     
     try:
         # Cargar datos
@@ -708,8 +708,7 @@ def main():
     
     finally:
         # Detener servidor MLflow si fue iniciado por este script
-        if proceso_mlflow is not None:
-            detener_mlflow_server(proceso_mlflow)
+        print("ENTRENAMIENTO COMPLETADO")
 
 
 if __name__ == '__main__':
