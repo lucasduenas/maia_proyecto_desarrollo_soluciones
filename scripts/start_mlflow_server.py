@@ -69,6 +69,8 @@ def iniciar_servidor_mlflow(
             f'localhost:{port}',
             f'127.0.0.1:{port}',
             '*',  # Permite cualquier host (útil para desarrollo)
+            '45.238.183.248:*',
+            '35.173.82.156:8050'
         ]
     
     allowed_hosts_str = ','.join(allowed_hosts)
