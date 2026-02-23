@@ -1,0 +1,3 @@
+split,n,auc,accuracy,f1,sensibilidad,especificidad,tp,tn,fp,fn
+train_eval,56,1.0,0.9464285714285714,0.9565217391304348,0.9166666666666666,1.0,33,20,0,3
+val_eval_densenet_demo,14,1.0,1.0,1.0,1.0,1.0,9,5,0,0

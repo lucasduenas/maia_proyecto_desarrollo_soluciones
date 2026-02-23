@@ -1,0 +1,10 @@
+mlflow==3.10.0
+cloudpickle==3.1.2
+defusedxml==0.7.1
+dill==0.4.0
+numpy==2.2.6
+pandas==2.3.3
+torch==2.9.0
+torchvision==0.24.0
+tqdm==4.67.1
+triton-windows==3.5.0.post21

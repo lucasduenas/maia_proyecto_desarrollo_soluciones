@@ -1,0 +1,23 @@
+artifact_path: file:///G:/My%20Drive/Educacion/U%20de%20los%20Andes/MAIA/IV/Proyecto%20-%20Desarrollo%20de%20Soluciones/Micro-proyecto/maia_proyecto_desarrollo_soluciones/outputs/hiatal_notebook_densenet121/mlflow_server_artifacts/1/models/m-aa577322f9d5415a8c01130289bf3924/artifacts
+flavors:
+  python_function:
+    config:
+      device: null
+    data: data
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.pytorch
+    pickle_module_name: mlflow.pytorch.pickle_module
+    python_version: 3.11.9
+  pytorch:
+    code: null
+    model_data: data
+    pytorch_version: 2.9.0+cu126
+mlflow_version: 3.10.0
+model_id: m-aa577322f9d5415a8c01130289bf3924
+model_size_bytes: 28422259
+model_uuid: m-aa577322f9d5415a8c01130289bf3924
+prompts: null
+run_id: 9fb036e50de64434b73ee0f618321bb1
+utc_time_created: '2026-02-23 00:42:01.119040'

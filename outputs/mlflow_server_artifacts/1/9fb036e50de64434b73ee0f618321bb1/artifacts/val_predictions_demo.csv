@@ -1,0 +1,15 @@
+image_path,y_true,y_pred,probability,threshold,correct
+G:\My Drive\Educacion\U de los Andes\MAIA\IV\Proyecto - Desarrollo de Soluciones\Micro-proyecto\maia_proyecto_desarrollo_soluciones\data\images\hernia\hernia15.png,1,1,0.9968969821929932,0.8131307363510132,1
+G:\My Drive\Educacion\U de los Andes\MAIA\IV\Proyecto - Desarrollo de Soluciones\Micro-proyecto\maia_proyecto_desarrollo_soluciones\data\images\hernia\hernia17.png,1,1,0.9599243402481079,0.8131307363510132,1
+G:\My Drive\Educacion\U de los Andes\MAIA\IV\Proyecto - Desarrollo de Soluciones\Micro-proyecto\maia_proyecto_desarrollo_soluciones\data\images\hernia\hernia18.png,1,1,0.8697970509529114,0.8131307363510132,1
+G:\My Drive\Educacion\U de los Andes\MAIA\IV\Proyecto - Desarrollo de Soluciones\Micro-proyecto\maia_proyecto_desarrollo_soluciones\data\images\hernia\hernia19.png,1,1,0.9379002451896667,0.8131307363510132,1
+G:\My Drive\Educacion\U de los Andes\MAIA\IV\Proyecto - Desarrollo de Soluciones\Micro-proyecto\maia_proyecto_desarrollo_soluciones\data\images\hernia\hernia30.png,1,1,0.895581066608429,0.8131307363510132,1
+G:\My Drive\Educacion\U de los Andes\MAIA\IV\Proyecto - Desarrollo de Soluciones\Micro-proyecto\maia_proyecto_desarrollo_soluciones\data\images\hernia\hernia33.png,1,1,0.8131307363510132,0.8131307363510132,1
+G:\My Drive\Educacion\U de los Andes\MAIA\IV\Proyecto - Desarrollo de Soluciones\Micro-proyecto\maia_proyecto_desarrollo_soluciones\data\images\hernia\hernia36.tif,1,1,0.9538516402244568,0.8131307363510132,1
+G:\My Drive\Educacion\U de los Andes\MAIA\IV\Proyecto - Desarrollo de Soluciones\Micro-proyecto\maia_proyecto_desarrollo_soluciones\data\images\hernia\hernia39.tif,1,1,0.9590185284614563,0.8131307363510132,1
+G:\My Drive\Educacion\U de los Andes\MAIA\IV\Proyecto - Desarrollo de Soluciones\Micro-proyecto\maia_proyecto_desarrollo_soluciones\data\images\hernia\hernia6.png,1,1,0.9973978996276855,0.8131307363510132,1
+G:\My Drive\Educacion\U de los Andes\MAIA\IV\Proyecto - Desarrollo de Soluciones\Micro-proyecto\maia_proyecto_desarrollo_soluciones\data\images\normal\normal11.png,0,0,0.09838499128818512,0.8131307363510132,1
+G:\My Drive\Educacion\U de los Andes\MAIA\IV\Proyecto - Desarrollo de Soluciones\Micro-proyecto\maia_proyecto_desarrollo_soluciones\data\images\normal\normal20.png,0,0,0.11668972671031952,0.8131307363510132,1
+G:\My Drive\Educacion\U de los Andes\MAIA\IV\Proyecto - Desarrollo de Soluciones\Micro-proyecto\maia_proyecto_desarrollo_soluciones\data\images\normal\normal21.png,0,0,0.5557278394699097,0.8131307363510132,1
+G:\My Drive\Educacion\U de los Andes\MAIA\IV\Proyecto - Desarrollo de Soluciones\Micro-proyecto\maia_proyecto_desarrollo_soluciones\data\images\normal\normal3.png,0,0,0.027610186487436295,0.8131307363510132,1
+G:\My Drive\Educacion\U de los Andes\MAIA\IV\Proyecto - Desarrollo de Soluciones\Micro-proyecto\maia_proyecto_desarrollo_soluciones\data\images\normal\normal9.png,0,0,0.023819977417588234,0.8131307363510132,1
