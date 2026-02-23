@@ -48,8 +48,8 @@ def iniciar_servidor_mlflow(
             raiz = raiz.parent
             
         # backend_store = str(raiz / 'outputs' / 'hiatal_mlflow' / 'mlruns')
-        backend_store = str(raiz / 'sqlite:///mlflow.db')        
-        artifact_root = str(raiz / 'outputs' / 'hiatal_mlflow' / 'mlartifacts')
+        backend_store = str(raiz / 'sqlite:///mlflow_server_backend.db')        
+        artifact_root = str(raiz / 'outputs' / 'mlflow_server_artifacts')
     
     # Crear directorios si no existen
     Path(backend_store).mkdir(parents=True, exist_ok=True)
@@ -90,7 +90,7 @@ def iniciar_servidor_mlflow(
         'mlflow', 'server',
         '--host', host,
         '--port', str(port),
-        # '--backend-store-uri', backend_store,
+        '--backend-store-uri', backend_store,
         '--default-artifact-root', artifact_root,
         '--allowed-hosts', f'{allowed_hosts[0]}, {allowed_hosts[1]}, {allowed_hosts[2]}',
         '--cors-allowed-origins', "*",
