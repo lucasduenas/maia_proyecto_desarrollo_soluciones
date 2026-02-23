@@ -4,3 +4,4 @@ outputs/
 *.pyc
 .vscode/
 .env
+.solution/
