@@ -1,0 +1,14 @@
+artifact_uri: /home/ubuntu/maia_proyecto_desarrollo_soluciones/outputs/hiatal_mlflow/mlartifacts/308831995731411314/d5af2179a4d64eabbaeb23d3a7dfa08c/artifacts
+end_time: null
+entry_point_name: ''
+experiment_id: '308831995731411314'
+lifecycle_stage: active
+run_id: d5af2179a4d64eabbaeb23d3a7dfa08c
+run_name: hiatal_20260222_012336
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1771723418264
+status: 1
+tags: []
+user_id: ubuntu
