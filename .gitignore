@@ -2,4 +2,5 @@
 data/csv/images_labels.csv
 outputs/
 *.pyc
+app_hernia/model/production_bundle.pt
 app_hernia/venv
