@@ -1,0 +1,33 @@
+# Imagen base de Python ligera.
+FROM python:3.11-slim
+
+# Variables para mejorar comportamiento en contenedor.
+# PYTHONDONTWRITEBYTECODE evita que Python genere archivos .pyc (__pycache__).
+# PYTHONUNBUFFERED logs/salida se impriman sin buffer, útil para logs en docker
+# PIP_NO_CACHE_DIR evita que pip guarde caché de paquetes
+ENV PYTHONDONTWRITEBYTECODE=1 \ # 
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+# Directorio de trabajo dentro del contenedor.
+WORKDIR /app
+
+# Instala dependencias del proyecto.
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+# Copia solo el código del backend.
+COPY backend ./backend
+
+# Cambia al directorio del servicio backend.
+WORKDIR /app/backend
+
+# Puerto expuesto por FastAPI/Uvicorn.
+EXPOSE 8000
+
+# Comando de inicio del backend.
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+
+# docker build -f Dockerfile.backend -t hernia-backend .
+# docker run --rm -p 8000:8000 hernia-backend
