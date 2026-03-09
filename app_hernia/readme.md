@@ -1,31 +1,67 @@
-# HernIA – Aplicación Web para Detección de Hernias (Prototipo)
+# HernIA – Aplicación Web para Detección de Hernias Hiatales
 
-HernIA es una aplicación web local de tipo **prototipo** diseñada para la detección de hernias a partir de imágenes médicas (por ejemplo, radiografías) mediante un modelo de aprendizaje automático.
+HernIA es una aplicación web local de tipo **prototipo** diseñada para la detección automática de **hernias hiatales** a partir de imágenes radiológicas frontales mediante un modelo de **Deep Learning basado en redes neuronales convolucionales (CNN)**.
 
-La aplicación está construida con una arquitectura desacoplada que separa la interfaz de usuario del motor de inferencia, permitiendo una futura escalabilidad hacia un entorno de producción.
-
----
-
-## Descripción General
-
-El sistema está compuesto por:
-
-- **Frontend** desarrollado en Flask:
-  - Carga de imágenes médicas
-  - Visualización de la imagen cargada
-  - Presentación de resultados de inferencia
-  - Exportación del diagnóstico en formato PDF
-
-- **Backend** desarrollado en FastAPI y ejecutado con Uvicorn:
-  - Recepción de imágenes
-  - Ejecución del modelo de inferencia
-  - Retorno de resultados estructurados en formato JSON
-
-Actualmente, el modelo de inferencia es un **placeholder**, preparado para ser reemplazado por un modelo real de Machine Learning o Deep Learning.
+La aplicación está construida con una arquitectura **desacoplada (frontend–backend)** que separa la interfaz de usuario del motor de inferencia, permitiendo una futura escalabilidad hacia un entorno clínico o de producción.
 
 ---
 
-## Arquitectura del Sistema
+# Descripción General
+
+El sistema está compuesto por dos componentes principales:
+
+## Frontend – Flask
+
+Interfaz web responsable de la interacción con el usuario.
+
+Funciones principales:
+
+- Carga de imágenes radiológicas
+- Visualización inmediata de la imagen seleccionada (preview automática)
+- Introducción de información del paciente:
+  - Nombre del paciente
+  - ID del paciente
+- Visualización del resultado del modelo
+- Visualización de la probabilidad de detección
+- Exportación de resultados en **PDF**
+- Reinicio del análisis mediante el botón **Nuevo análisis**
+
+---
+
+## Backend – FastAPI
+
+API encargada de ejecutar la inferencia del modelo de Machine Learning.
+
+Funciones principales:
+
+- Recepción de imágenes desde el frontend
+- Preprocesamiento de la imagen
+- Ejecución del modelo de clasificación
+- Retorno del resultado en formato **JSON**
+
+---
+
+# Modelo de Inteligencia Artificial
+
+### Características del modelo
+
+- Tipo: Clasificación binaria
+- Entrada: Imagen radiológica frontal
+- Salida del modelo:
+  - **Probabilidad de hernia hiatal**
+  - Clasificación final (hernia / no hernia)
+
+### Flujo de inferencia
+
+1. Recepción de imagen radiológica
+2. Preprocesamiento de la imagen
+3. Ejecución del modelo 
+4. Obtención de probabilidad
+5. Interpretación del resultado
+
+---
+
+# Arquitectura del Sistema
 
 Navegador Web
 ↓
@@ -35,25 +71,35 @@ Frontend Flask (http://localhost:5000
 Backend FastAPI (http://localhost:8000
 )
 ↓
-Modelo de Inferencia (placeholder)
+Modelo de Inferencia
+↓
+Resultado JSON
 
 ## Estructura de la APP
 
 hernia_app/
+│
 ├── backend/
-│ ├── main.py # Aplicación FastAPI
-│ └── model.py # Lógica de inferencia (placeholder)
+│ ├── main.py # API FastAPI
+│ └── model.py # Carga e inferencia del modelo
+│ ├── model/
+│ │ └── production_bundle.pt #Modelo entrenado
 │
 ├── frontend/
 │ ├── app.py # Aplicación Flask
+│
 │ ├── templates/
-│ │ └── index.html # Interfaz de usuario
+│ │ └── index.html # Interfaz principal
+│
 │ └── static/
-    └── uploads/  # Carpeta para guardar imágenes subidas por los usuarios
-│   └── style.css # Estilos CSS
+│ ├── style.css # Estilos de la aplicación
+│ └── uploads/ # Imágenes cargadas por usuarios
 │
 ├── venv/ # Entorno virtual de Python
-└── requirements.txt # Dependencias del proyecto
+│
+├── requirements.txt # Dependencias del proyecto
+│
+└── README.md
 
 ## Instalación
 
@@ -92,25 +138,29 @@ python app.py
 
 1. Acceda desde el navegador a http://localhost:5000
 
-2. Cargue una imagen médica en formato PNG o JPG
+2. Introducir datos del paciente
 
-3. Presione el botón de análisis
+3. Cargue una imagen médica en formato PNG o JPG
 
-4. La aplicación:
+4. Presione el botón de análisis
+
+5. La aplicación:
 
     Envía la imagen al backend
 
     Ejecuta la inferencia
 
-    Muestra el resultado y la confianza
+    Muestra el resultado y la probabilidad de Hernia
 
 5. Utilice la opción Exportar PDF para descargar un reporte con:
+
+    Datos del paciente
 
     Imagen analizada
 
     Resultado del diagnóstico
 
-    Nivel de confianza
+    Probabilidad de Hernia
 
 ## Exportación a PDF
 
@@ -118,6 +168,6 @@ La generación del PDF se realiza en el frontend mediante la librería reportlab
 
 El archivo se genera en memoria, sin crear archivos temporales
 
-El PDF incluye imagen y resultados de inferencia
+El PDF incluye datos del paciente, imagen y resultados de inferencia
 
 Nota: la implementación actual está pensada para uso local y de un solo usuario.
