@@ -3,3 +3,5 @@ data/csv/images_labels.csv
 outputs/
 *.pyc
 app_hernia/venv
+*.pt
+*.png
