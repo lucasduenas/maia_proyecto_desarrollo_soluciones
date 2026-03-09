@@ -1,138 +1,245 @@
-body {
-    margin: 0;
-    background: #eef2f7;
-    font-family: "Segoe UI", sans-serif;
+/* ---------- GLOBAL ---------- */
+
+body{
+    margin:0;
+    padding:40px;
+    background:#eef2f7;
+    font-family:"Segoe UI", Arial, sans-serif;
 }
 
-.app-container {
-    display: flex;
-    padding: 25px;
-    gap: 20px;
+/* ---------- LAYOUT ---------- */
+
+.app-container{
+    display:flex;
+    padding:25px;
+    gap:20px;
 }
 
-.viewer {
-    flex: 2;
-    background: #0f172a;
-    color: white;
-    border-radius: 12px;
-    padding: 20px;
+/* ---------- HEADER ---------- */
+
+.app-header{
+    text-align:center;
+    margin-bottom:30px;
 }
 
-.results {
-    flex: 1;
-    background: white;
-    border-radius: 12px;
-    padding: 20px;
+.app-header h1{
+    font-size:2.5rem;
+    margin-bottom:5px;
+    color:#1f2937;
 }
 
-.xray {
-    width: 100%;
-    margin-top: 15px;
-    border-radius: 10px;
-    background: black;
+.app-header p{
+    font-size:1rem;
+    color:#6b7280;
 }
 
-button {
-    margin-top: 10px;
-    padding: 8px 14px;
-    border: none;
-    background: #2563eb;
-    color: white;
-    border-radius: 6px;
-    cursor: pointer;
+/* ---------- VIEWER (LEFT PANEL) ---------- */
+
+.viewer{
+    flex:2;
+    background:#0f172a;
+    color:white;
+    border-radius:18px;
+    padding:30px;
 }
 
-.status {
-    padding: 12px;
-    border-radius: 8px;
-    margin-bottom: 15px;
-    font-weight: bold;
+.viewer h2{
+    font-size:28px;
+    margin-bottom:25px;
 }
 
-.status.danger {
-    background: #fee2e2;
-    color: #991b1b;
+/* ---------- FORM ---------- */
+
+.analysis-form{
+    display:flex;
+    flex-direction:column;
+    gap:25px;
 }
 
-.status.success {
-    background: #dcfce7;
-    color: #166534;
+.form-row{
+    display:flex;
+    gap:30px;
 }
 
-.confidence {
-    margin-top: 10px;
+.form-group{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
 }
 
-.bar {
-    height: 10px;
-    background: #e5e7eb;
-    border-radius: 5px;
-    overflow: hidden;
+.form-group input{
+    padding:10px;
+    border-radius:6px;
+    border:none;
+    width:250px;
 }
 
-.fill {
-    height: 100%;
-    background: #2563eb;
+/* ---------- FILE UPLOAD ---------- */
+
+.file-upload-group{
+    display:flex;
+    align-items:center;
+    gap:20px;
 }
 
-.pdf-btn {
-    display: inline-block;
-    margin-top: 20px;
-    padding: 10px;
-    background: #16a34a;
-    color: white;
-    border-radius: 6px;
-    text-decoration: none;
+.file-label{
+    display:inline-block;
+    padding:12px 20px;
+    background:#3a6df0;
+    color:white;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:600;
 }
 
-.app-header {
-    text-align: center;
-    margin-bottom: 30px;
+.file-label:hover{
+    background:#2c5ad6;
 }
 
-.app-header h1 {
-    font-size: 2.5rem;
-    margin-bottom: 5px;
-    color: #1f2937;
+#file-name{
+    font-size:0.9rem;
+    color:#e5e7eb;
 }
 
-.app-header p {
-    font-size: 1rem;
-    color: #6b7280;
+/* ---------- BUTTONS ---------- */
+
+button{
+    border:none;
+    cursor:pointer;
 }
 
-.app-footer {
-    margin-top: 40px;
-    padding: 15px 25px;
-    text-align: center;
-    font-size: 0.85rem;
-    color: #6b7280;
-    background-color: #f9fafb;
-    border-top: 1px solid #e5e7eb;
+/* analyze */
+
+.analyze-btn{
+    background:#3a6df0;
+    padding:12px 25px;
+    border-radius:10px;
+    font-size:16px;
+    font-weight:600;
+    color:white;
+    width:180px;
 }
 
-.app-footer p {
-    max-width: 900px;
-    margin: 0 auto;
-    line-height: 1.5;
+.analyze-btn:hover{
+    background:#2c5ad6;
 }
 
-.file-label {
-    display: inline-block;
-    padding: 10px 18px;
-    background-color: #2563eb;
-    color: white;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 500;
-    margin-right: 12px;
+/* button group */
+
+.button-group{
+    display:flex;
+    gap:20px;
+    margin-top:25px;
 }
 
-.file-label:hover {
-    background-color: #1e40af;
+/* export pdf */
+
+.pdf-btn{
+    background:#1f9d55;
+    padding:12px 22px;
+    border-radius:10px;
+    color:white;
+    text-decoration:none;
+    font-weight:600;
+    transition:0.2s;
 }
 
-#file-name {
-    font-size: 0.9rem;
-    color: #e5e7eb;
+.pdf-btn:hover{
+    background:#188746;
+}
+
+/* new analysis */
+
+.new-btn{
+    background:#3a6df0;
+    padding:12px 22px;
+    border-radius:10px;
+    color:white;
+    font-weight:600;
+    transition:0.2s;
+}
+
+.new-btn:hover{
+    background:#2f5cd6;
+}
+
+/* ---------- IMAGE PREVIEW ---------- */
+
+.preview-container{
+    margin-top:30px;
+    text-align:center;
+    overflow:auto;
+    max-height:1000px;
+}
+
+.xray{
+    max-width:98%;
+    height:auto;
+    border-radius:5px;
+    background:black;
+    border:4px solid #2c5ad6;
+}
+
+/* ---------- RESULTS PANEL ---------- */
+
+.results{
+    flex:1;
+    background:white;
+    border-radius:12px;
+    padding:20px;
+}
+
+/* status */
+
+.status{
+    padding:12px;
+    border-radius:8px;
+    margin-bottom:15px;
+    font-weight:bold;
+}
+
+.status.danger{
+    background:#fee2e2;
+    color:#991b1b;
+}
+
+.status.success{
+    background:#dcfce7;
+    color:#166534;
+}
+
+/* confidence */
+
+.confidence{
+    margin-top:10px;
+}
+
+.bar{
+    height:10px;
+    background:#e5e7eb;
+    border-radius:5px;
+    overflow:hidden;
+}
+
+.fill{
+    height:100%;
+    background:#2563eb;
+}
+
+/* ---------- FOOTER ---------- */
+
+.app-footer{
+    margin-top:40px;
+    padding:15px 25px;
+    text-align:center;
+    font-size:0.85rem;
+    color:#6b7280;
+    background:#f9fafb;
+    border-top:1px solid #e5e7eb;
+}
+
+.app-footer p{
+    max-width:900px;
+    margin:auto;
+    line-height:1.5;
 }
