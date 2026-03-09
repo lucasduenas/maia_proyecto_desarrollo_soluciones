@@ -1,0 +1,30 @@
+# Imagen base de Python ligera.
+FROM python:3.11-slim
+
+# Variables para mejorar comportamiento en contenedor.
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1
+
+# Directorio de trabajo dentro del contenedor.
+WORKDIR /app
+
+# Instala dependencias del proyecto.
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+
+# Copia solo el código del frontend.
+COPY frontend ./frontend
+
+# Cambia al directorio del servicio frontend.
+WORKDIR /app/frontend
+
+# Puerto expuesto por Flask.
+EXPOSE 5000
+
+# Comando de inicio del frontend.
+CMD ["flask", "--app", "app", "run", "--host", "0.0.0.0", "--port", "5000"]
+
+
+# docker build -f Dockerfile.frontend -t hernia-frontend .
+# docker run --rm -p 5000:5000 hernia-frontend
