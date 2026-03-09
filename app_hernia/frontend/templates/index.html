@@ -1,22 +1,12 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <title>HernIA | Clasificación de hernias hiatales</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
-<script>
-    const fileInput = document.getElementById("file-upload");
-    const fileNameSpan = document.getElementById("file-name");
 
-    fileInput.addEventListener("change", () => {
-        if (fileInput.files.length > 0) {
-            fileNameSpan.textContent = fileInput.files[0].name;
-        } else {
-            fileNameSpan.textContent = "Ningún archivo seleccionado";
-        }
-    });
-</script>
 <body>
 
 <header class="app-header">
@@ -26,56 +16,153 @@
 
 <div class="app-container">
 
-    <!-- LEFT -->
+    <!-- LEFT PANEL -->
     <div class="viewer">
+
         <h2>Adjuntar Radiografía</h2>
 
-        <form method="POST" enctype="multipart/form-data">
-            <label for="file-upload" class="file-label">
-                Seleccionar imagen
-            </label>
-            <span id="file-name">Ningún archivo seleccionado</span>
-        
-            <input id="file-upload" type="file" name="image" accept="image/*" required hidden>
-        
-            <button type="submit">Iniciar Análisis</button>
+        <form method="POST" enctype="multipart/form-data" class="analysis-form">
+
+            <div class="form-row">
+
+                <div class="form-group">
+                    <label>Nombre del paciente</label>
+                    <input type="text" name="patient_name" required>
+                </div>
+
+                <div class="form-group">
+                    <label>ID del paciente</label>
+                    <input type="text" name="patient_id" required>
+                </div>
+
+            </div>
+
+            <div class="form-group file-upload-group">
+
+                <label for="file-input" class="file-label">
+                    Seleccionar imagen
+                </label>
+
+                <span id="file-name">Ningún archivo seleccionado</span>
+
+                <input
+                    type="file"
+                    name="image"
+                    id="file-input"
+                    accept="image/*"
+                    hidden
+                >
+
+            </div>
+
+            <button type="submit" class="analyze-btn">
+                Iniciar Análisis
+            </button>
+
         </form>
 
-        {% if image_preview %}
-            <img src="data:image/png;base64,{{ image_preview }}" class="xray">
-        {% endif %}
+        <!-- IMAGE PREVIEW -->
+        <div class="preview-container">
+
+            <img
+                id="xray-preview"
+                class="xray"
+                src="{{ 'data:image/png;base64,' + image_preview if image_preview else '' }}"
+                style="display:{% if image_preview %}block{% else %}none{% endif %};"
+            >
+
+        </div>
+
     </div>
 
-    <!-- RIGHT -->
+    <!-- RIGHT PANEL -->
     <div class="results">
+
         <h2>Resultados</h2>
 
         {% if result %}
+
             <div class="status {{ 'danger' if result.has_hernia else 'success' }}">
-                {{ "Hernia detectada" if result.has_hernia else "No se ha detectado hernia" }}
+                {{ "Se detectó hernia" if result.has_hernia else "No se ha detectado hernia" }}
             </div>
 
             <div class="confidence">
-                <span>Nivel de Confianza</span>
+
+                <span>Probabilidad de Hernia</span>
+
                 <div class="bar">
                     <div class="fill" style="width: {{ result.confidence * 100 }}%"></div>
                 </div>
-                <small>{{ result.confidence * 100 }}%</small>
+
+                <small>{{ (result.confidence * 100) | round(2) }}%</small>
+
             </div>
 
-            <a href="/export_pdf" class="pdf-btn">Exportar en PDF</a>
+            <div class="button-group">
+
+                <a href="/export_pdf" class="pdf-btn">
+                    Exportar en PDF
+                </a>
+
+                <form method="GET">
+                    <button class="new-btn">
+                        Nuevo análisis
+                    </button>
+                </form>
+
+            </div>
+
         {% else %}
+
             <p>No se ha realizado ningún análisis aún.</p>
+
         {% endif %}
+
     </div>
 
 </div>
+
 <footer class="app-footer">
     <p>
         Esta aplicación tiene fines exclusivamente académicos y de investigación.
-        Los resultados generados no deben ser utilizados para diagnóstico, tratamiento
-        o toma de decisiones clínicas en situaciones médicas reales.
+        Los resultados generados no deben ser utilizados para diagnóstico,
+        tratamiento o toma de decisiones clínicas en situaciones médicas reales.
     </p>
 </footer>
+
+<!-- IMAGE PREVIEW SCRIPT -->
+<script>
+
+document.addEventListener("DOMContentLoaded", function(){
+
+    const fileInput = document.getElementById("file-input");
+    const preview = document.getElementById("xray-preview");
+    const fileName = document.getElementById("file-name");
+
+    fileInput.addEventListener("change", function(){
+
+        const file = this.files[0];
+
+        if(!file) return;
+
+        fileName.textContent = file.name;
+
+        const reader = new FileReader();
+
+        reader.onload = function(e){
+
+            preview.src = e.target.result;
+            preview.style.display = "block";
+
+        };
+
+        reader.readAsDataURL(file);
+
+    });
+
+});
+
+</script>
+
 </body>
 </html>
