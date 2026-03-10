@@ -18,8 +18,8 @@ jobs:
       - name: Set up AWS CLI
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ASIA3D224FUPD3SQ74WT
-          aws-secret-access-key: R9dn+ZkT8JUGFjt5VULnVBjaH6Ur0bsz1gRWDqeX
+          aws-access-key-id: ${{ variables.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ variables.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1  #
 
       # Paso 4: Construcción de las imágenes Docker
@@ -27,6 +27,12 @@ jobs:
         run: |
           docker build -t front-files ./app_hernia/Dockerfile.frontend
           docker build -t back-model ./app_hernia/Dockerfile.backend
+
+      # Paso 5: Guardar la clave privada en un archivo temporal
+      - name: Save EC2 private key
+        run: |
+          echo "${{ secrets.EC2_KEY }}" > /tmp/ec2-key.pem
+          chmod 600 /tmp/ec2-key.pem  # Asegura que la clave tenga permisos seguros
 
       # Paso 5: Conectar a EC2 y copiar las imágenes Docker
       - name: Copy Docker images to EC2
