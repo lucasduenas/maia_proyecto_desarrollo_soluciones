@@ -1,0 +1,55 @@
+name: Deploy Docker Containers to AWS EC2
+
+on:
+  push:
+    branches:
+      - main 
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+
+      # Paso 1: Checkout del código fuente
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Paso 2: Configuración de AWS
+      - name: Set up AWS CLI
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ASIA3D224FUPD3SQ74WT
+          aws-secret-access-key: R9dn+ZkT8JUGFjt5VULnVBjaH6Ur0bsz1gRWDqeX
+          aws-region: us-east-1  #
+
+      # Paso 4: Construcción de las imágenes Docker
+      - name: Build Docker images
+        run: |
+          docker build -t front-files ./app_hernia/Dockerfile.frontend
+          docker build -t back-model ./app_hernia/Dockerfile.backend
+
+      # Paso 5: Conectar a EC2 y copiar las imágenes Docker
+      - name: Copy Docker images to EC2
+        run: |
+          # Guardar las imágenes en archivos tar
+          docker save front-files -o front.tar
+          docker save back-model -o back.tar
+
+          # Transferir las imágenes Docker a EC2
+          scp -i ./keys/key-vm-ver.pem -o StrictHostKeyChecking=no front.tar ubuntu@<EC2_PUBLIC_IP>:/home/ubuntu
+          scp -i ./keys/key-vm-ver.pem -o StrictHostKeyChecking=no back.tar ubuntu@<EC2_PUBLIC_IP>:/home/ubuntu
+
+      # Paso 6: Conectar a EC2 y cargar las imágenes Docker
+      - name: Load Docker images on EC2 and run containers
+        run: |
+          ssh -i /path/to/your-key.pem -o StrictHostKeyChecking=no ec2-user@<EC2_PUBLIC_IP> << 'EOF'
+            # Cargar las imágenes Docker en la instancia EC2
+            docker load -i /home/ubuntu/front.tar
+            docker load -i /home/ubuntu/back.tar
+
+            # Ejecutar los contenedores Docker
+            docker run -d --name front front-files
+            docker run -d --name back back-model
+
+            exit
+          EOF

@@ -5,3 +5,5 @@ outputs/
 app_hernia/venv
 *.pt
 *.png
+
+.vscode
