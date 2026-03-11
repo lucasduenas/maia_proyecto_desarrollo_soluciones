@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile.backend
     expose:
       - "8000"
+    networks:
+      - hernia-net
 
   frontend:
     build:
@@ -16,3 +18,9 @@ services:
       - "80:5000"
     environment:
       - BACKEND_URL=http://backend:8000
+    networks:
+      - hernia-net
+
+networks:
+  hernia-net:
+    driver: bridge
