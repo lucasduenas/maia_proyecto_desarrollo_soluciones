@@ -5,7 +5,7 @@ FROM python:3.11-slim
 # PYTHONDONTWRITEBYTECODE evita que Python genere archivos .pyc (__pycache__).
 # PYTHONUNBUFFERED logs/salida se impriman sin buffer, útil para logs en docker
 # PIP_NO_CACHE_DIR evita que pip guarde caché de paquetes
-ENV PYTHONDONTWRITEBYTECODE=1 \ # 
+ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
 
