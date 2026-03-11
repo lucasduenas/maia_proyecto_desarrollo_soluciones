@@ -9,7 +9,6 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1
 
-# Directorio de trabajo dentro del contenedor.
 WORKDIR /app
 
 # Install system dependencies required for PyTorch
@@ -21,12 +20,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install PyTorch and Torchvision for CPU
 RUN pip install torch torchvision --extra-index-url https://download.pytorch.org/whl/cpu
 
-# Instala dependencias del proyecto.
+# Copia archivos del proyecto necesarios para el backend.
 COPY requirements.txt .
-RUN pip install -r requirements.txt
-
-# Copia solo el código del backend.
 COPY backend ./backend
+COPY model ./model
+
+# Instala dependencias del proyecto.
+RUN pip install -r requirements.txt
 
 # Cambia al directorio del servicio backend.
 WORKDIR /app/backend

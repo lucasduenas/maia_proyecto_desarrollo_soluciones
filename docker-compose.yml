@@ -3,6 +3,8 @@ services:
     build:
       context: ./app_hernia
       dockerfile: Dockerfile.backend
+    environment:
+      - HIATAL_BUNDLE_PATH=/app/model/production_bundle.pt
     expose:
       - "8000"
     networks:

@@ -50,6 +50,12 @@
     <div class="results">
         <h2>Resultados</h2>
 
+        {% if error_message %}
+            <div class="status danger">
+                {{ error_message }}
+            </div>
+        {% endif %}
+
         {% if result %}
             <div class="status {{ 'danger' if result.has_hernia else 'success' }}">
                 {{ "Hernia detectada" if result.has_hernia else "No se ha detectado hernia" }}
