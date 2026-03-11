@@ -1,15 +1,15 @@
 services:
   backend:
     build:
-      context: ./
-      dockerfile: ./app_hernia/Dockerfile.backend
+      context: ./app_hernia
+      dockerfile: Dockerfile.backend
     expose:
       - "8000"
 
   frontend:
     build:
-      context: ./
-      dockerfile: ./app_hernia/Dockerfile.frontend
+      context: ./app_hernia
+      dockerfile: Dockerfile.frontend
     depends_on:
       - backend
     ports:
