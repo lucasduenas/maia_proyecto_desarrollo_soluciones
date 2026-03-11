@@ -4,6 +4,4 @@ fastapi
 uvicorn
 python-multipart
 reportlab
-torch
-torchvision
 Pillow

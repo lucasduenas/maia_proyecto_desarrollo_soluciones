@@ -12,6 +12,15 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 # Directorio de trabajo dentro del contenedor.
 WORKDIR /app
 
+# Install system dependencies required for PyTorch
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libgomp1 && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install PyTorch and Torchvision for CPU
+RUN pip install torch torchvision --extra-index-url https://download.pytorch.org/whl/cpu
+
 # Instala dependencias del proyecto.
 COPY requirements.txt .
 RUN pip install -r requirements.txt
