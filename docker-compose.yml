@@ -20,6 +20,8 @@ services:
       - BACKEND_URL=http://backend:8000
     networks:
       - hernia-net
+    links:
+      - backend
 
 networks:
   hernia-net:
