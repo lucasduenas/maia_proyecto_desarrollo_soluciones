@@ -6,7 +6,8 @@ from typing import Any, Optional
 
 import torch
 import torchvision.transforms as T
-from fastapi import FastAPI, HTTPException
+import io
+from fastapi import FastAPI, HTTPException, File, UploadFile
 from pydantic import BaseModel, Field
 from torch import nn
 from torchvision.models import densenet121
@@ -124,15 +125,11 @@ class ServicioInferenciaHiatal:
         return T.Compose(ops)
 
     @torch.no_grad()
-    def inferir_por_ruta(self, image_path: str | Path) -> dict[str, Any]:
+    def inferir_por_datos(self, image_file: io.BytesIO) -> dict[str, Any]:
         if self.transformacion is None:
             raise RuntimeError("Servicio no inicializado correctamente.")
 
-        ruta_imagen = Path(image_path)
-        if not ruta_imagen.exists() or not ruta_imagen.is_file():
-            raise FileNotFoundError(f"Ruta de imagen invalida: {ruta_imagen}")
-
-        with Image.open(ruta_imagen) as imagen:
+        with Image.open(image_file) as imagen:
             gris = imagen.convert("L")
             if self.usar_autocontraste:
                 gris = ImageOps.autocontrast(gris)
@@ -143,7 +140,6 @@ class ServicioInferenciaHiatal:
         pred = int(prob >= self.umbral)
 
         return {
-            "image_path": str(ruta_imagen),
             "prob_hernia": float(prob),
             "threshold": float(self.umbral),
             "pred": pred,
@@ -154,12 +150,7 @@ class ServicioInferenciaHiatal:
         }
 
 
-class InferRequest(BaseModel):
-    image_path: str = Field(..., description="Ruta absoluta o relativa a la imagen en disco.")
-
-
 class InferResult(BaseModel):
-    image_path: str
     prob_hernia: float
     threshold: float
     pred: int
@@ -253,30 +244,15 @@ def health():
 
 
 @app.post("/infer", response_model=InferResponse)
-def infer(req: InferRequest):
+def infer(image: UploadFile = File(...)):
     servicio = _obtener_servicio()
     try:
-        resultado = servicio.inferir_por_ruta(req.image_path)
+        # Usar el método inferir_por_datos que procesa un stream de bytes
+        resultado = servicio.inferir_por_datos(image.file)
         return InferResponse(ok=True, result=InferResult(**resultado), error=None)
-    except FileNotFoundError as exc:
-        raise HTTPException(status_code=404, detail=str(exc)) from exc
     except Exception as exc:
+        # Captura cualquier otra excepción durante la inferencia
         raise HTTPException(status_code=500, detail=f"Error de inferencia: {exc}") from exc
-
-
-def manejar_solicitud_inferencia(payload: dict[str, Any]) -> dict[str, Any]:
-    if not isinstance(payload, dict):
-        return {"ok": False, "error": "payload debe ser un dict con la llave image_path"}
-
-    image_path = payload.get("image_path")
-    if not isinstance(image_path, str) or not image_path.strip():
-        return {"ok": False, "error": "image_path es obligatorio y debe ser string"}
-
-    try:
-        resultado = _obtener_servicio().inferir_por_ruta(image_path.strip())
-        return {"ok": True, "result": resultado}
-    except Exception as exc:
-        return {"ok": False, "error": str(exc)}
 
 
 if __name__ == "__main__":
