@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./
+      dockerfile: ./app_hernia/Dockerfile.backend
+    expose:
+      - "8000"
+
+  frontend:
+    build:
+      context: ./
+      dockerfile: ./app_hernia/Dockerfile.frontend
+    depends_on:
+      - backend
+    ports:
+      - "80:5000"
+    environment:
+      - BACKEND_URL=http://backend:8000

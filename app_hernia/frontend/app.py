@@ -2,6 +2,7 @@ import os
 import io
 import uuid
 import base64
+import requests
 from flask import Flask, render_template, request, send_file, session
 from reportlab.platypus import (
     SimpleDocTemplate, Paragraph, Spacer, Image as RLImage, Table, TableStyle
@@ -10,49 +11,82 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.pagesizes import A4
 from reportlab.lib import colors
 
-app = Flask(__name__)
-app.secret_key = "hernia_secret_key"
-
 UPLOAD_FOLDER = "static/uploads"
+
+app = Flask(__name__)
+app.secret_key = "hernia_secret"
+
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+
+def infer_backend(image_bytes):
+
+    backend_base_url = os.environ.get("BACKEND_URL", "http://127.0.0.1:8000")
+    url = f"{backend_base_url}/infer"
+
+    files = {
+        "image": image_bytes
+    }
+
+    r = requests.post(url, files=files)
+
+    return r.json()
 
 
 @app.route("/", methods=["GET", "POST"])
 def index():
+
     result = None
     image_preview = None
+    error_message = None
 
     if request.method == "POST":
-        image = request.files["image"]
 
-        # 1. Crear ID único por análisis
-        analysis_id = str(uuid.uuid4())
+        if "image" not in request.files or request.files["image"].filename == '':
+            error_message = "No se envió ninguna imagen o el archivo es inválido"
+        else:
 
-        # 2. Leer imagen una sola vez
-        image_bytes = image.read()
+            patient_name = request.form.get("patient_name")
+            patient_id = request.form.get("patient_id")
+            image = request.files["image"]
 
-        # 3. Guardar imagen con ID único
-        image_path = os.path.join(UPLOAD_FOLDER, f"{analysis_id}.png")
-        with open(image_path, "wb") as f:
-            f.write(image_bytes)
+            analysis_id = str(uuid.uuid4())
 
-        # 4. Preview en base64
-        image_preview = base64.b64encode(image_bytes).decode("utf-8")
+            image_bytes = image.read()
 
-        # 5. Inferencia (mock por ahora)
-        result = {
-            "analysis_id": analysis_id,
-            "has_hernia": True,
-            "confidence": 0.88
-        }
+            image_path = os.path.join(UPLOAD_FOLDER, f"{analysis_id}.png")
 
-        # 6. Guardar resultado en sesión
-        session["last_result"] = result
+            with open(image_path, "wb") as f:
+                f.write(image_bytes)
+
+            image_preview = base64.b64encode(image_bytes).decode()
+
+            response = infer_backend(image_bytes)
+
+            print("Backend response:", response)
+
+            if not response.get("ok"):
+                error_message = response.get("error", "Error del backend")
+
+            else:
+
+                backend_result = response["result"]
+
+                result = {
+                    "analysis_id": analysis_id,
+                    "patient_name": patient_name,
+                    "patient_id": patient_id,
+                    "has_hernia": backend_result["pred"] == 1,
+                    "confidence": backend_result["prob_hernia"]
+                }
+
+                session["last_result"] = result
 
     return render_template(
         "index.html",
         result=result,
-        image_preview=image_preview
+        image_preview=image_preview,
+        error_message=error_message
     )
 
 
@@ -93,6 +127,23 @@ def export_pdf():
     )
     elements.append(title)
 
+    # ===== DATOS DEL PACIENTE =====
+    patient_table = Table(
+    [
+        ["Nombre del paciente", result.get("patient_name", "N/A")],
+        ["ID del paciente", result.get("patient_id", "N/A")],
+    ],
+    colWidths=[200, 200]
+    )
+
+    patient_table.setStyle(TableStyle([
+        ("GRID", (0,0), (-1,-1), 0.5, colors.lightgrey),
+        ("FONTSIZE", (0,0), (-1,-1), 11),
+    ]))
+
+    elements.append(patient_table)
+    elements.append(Spacer(1,20))
+
     # ===== IMAGEN =====
     elements.append(RLImage(image_path, width=320, height=320))
     elements.append(Spacer(1, 20))
@@ -107,7 +158,7 @@ def export_pdf():
     table = Table(
         [
             ["Resultado", status_text],
-            ["Nivel de confianza", f"{int(result['confidence'] * 100)} %"]
+            ["Probabilidad de Hernia", f"{int(result['confidence'] * 100)} %"]
         ],
         colWidths=[200, 200]
     )

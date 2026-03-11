@@ -1,18 +1,48 @@
-from fastapi import FastAPI, File, UploadFile
-from fastapi.middleware.cors import CORSMiddleware
-from model import predict_hernia
+from fastapi import FastAPI, HTTPException, File, UploadFile
+from pathlib import Path
+from model import ServicioInferenciaHiatal
 
-app = FastAPI(title="Hernia Detection API")
+app = FastAPI(title="HernIA Inference API")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"], 
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+MODEL_PATH = Path("model/production_bundle.pt")
 
-@app.post("/predict")
-async def predict(file: UploadFile = File(...)):
-    image_bytes = await file.read()
-    result = predict_hernia(image_bytes)
-    return result
+servicio = None
+
+
+@app.on_event("startup")
+def cargar_modelo():
+    global servicio
+
+    try:
+        servicio = ServicioInferenciaHiatal(MODEL_PATH)
+    except Exception as e:
+        servicio = None
+        print("Error cargando modelo:", e)
+
+
+@app.get("/health")
+def health():
+
+    return {
+        "ok": servicio is not None
+    }
+
+
+@app.post("/infer")
+def infer(image: UploadFile = File(...)):
+
+    if servicio is None:
+        raise HTTPException(503, "Modelo no disponible")
+
+    try:
+
+        result = servicio.inferir_por_datos(image.file)
+
+        return {
+            "ok": True,
+            "result": result
+        }
+
+    except Exception as e:
+
+        raise HTTPException(500, str(e))
